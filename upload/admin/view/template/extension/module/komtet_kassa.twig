@@ -1,0 +1,195 @@
+{{ header }}{{ column_left }}
+<div id="content">
+	<div class="page-header">
+		<div class="container-fluid">
+			{% if not denied %}
+				<div class="pull-right">
+					<button type="submit" form="form-module" data-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa fa-save"></i></button>
+					<a href="{{ cancel }}" data-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-default"><i class="fa fa-reply"></i></a>
+				</div>
+			{% endif %}
+			<h1>{{ heading_title }}</h1>
+			<ul class="breadcrumb">
+				{% for breadcrumb in breadcrumbs %}
+				<li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+				{% endfor %}
+			</ul>
+		</div>
+	</div>
+	<div class="container-fluid">
+		{% if denied %}
+			<div class="alert alert-danger">
+				<i class="fa fa-exclamation-circle"></i> {{ error_permission }}
+			</div>
+		{% else %}
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_edit }}</h3>
+				</div>
+				<div class="panel-body">
+					<form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-module" class="form-horizontal">
+						<div class="form-group required">
+							<label class="col-sm-2 control-label" for="module_komtet_kassa_server_url">{{ setting_server_url }}</label>
+							<div class="col-sm-10">
+								<input
+									class="form-control"
+									id="module_komtet_kassa_server_url"
+									name="module_komtet_kassa_server_url"
+									type="text"
+									value="{{ settings.server_url }}" />
+								{% if errors.server_url %}
+								<div class="text-danger">{{ errors.server_url }}</div>
+								{% endif %}
+							</div>
+						</div>
+						<div class="form-group required">
+							<label class="col-sm-2 control-label" for="module_komtet_kassa_shop_id">{{ setting_shop_id }}</label>
+							<div class="col-sm-10">
+								<input
+									class="form-control"
+									id="module_komtet_kassa_shop_id"
+									name="module_komtet_kassa_shop_id"
+									type="text"
+									value="{{ settings.shop_id }}" />
+								{% if errors.shop_id %}
+								<div class="text-danger">{{ errors.shop_id }}</div>
+								{% endif %}
+							</div>
+						</div>
+						<div class="form-group required">
+							<label class="col-sm-2 control-label" for="module_komtet_kassa_secret_key">{{ setting_secret_key }}</label>
+							<div class="col-sm-10">
+								<input
+									class="form-control"
+									id="module_komtet_kassa_secret_key"
+									name="module_komtet_kassa_secret_key"
+									type="text"
+									value="{{ settings.secret_key }}" />
+								{% if errors.secret_key %}
+								<div class="text-danger">{{ errors.secret_key }}</div>
+								{% endif %}
+							</div>
+						</div>
+						<div class="form-group required">
+							<label class="col-sm-2 control-label" for="module_komtet_kassa_queue_id">{{ setting_queue_id }}</label>
+							<div class="col-sm-10">
+								<input
+									class="form-control"
+									id="module_komtet_kassa_queue_id"
+									name="module_komtet_kassa_queue_id"
+									type="text"
+									value="{{ settings.queue_id }}" />
+								{% if errors.queue_id %}
+								<div class="text-danger">{{ errors.queue_id }}</div>
+								{% endif %}
+							</div>
+						</div>
+						<div class="form-group required">
+							<label class="col-sm-2 control-label" for="module_komtet_kassa_tax_system">{{ setting_tax_system }}</label>
+							<div class="col-sm-10">
+								<select name="module_komtet_kassa_tax_system" id="module_komtet_kassa_tax_system" class="form-control" autocomplete="off">
+								{% for i in tax_systems %}
+									<option value="{{ i.value }}" {{ i.enabled ? ' selected="selected"' : '' }}>{{ i.label }}</option>
+								{% endfor %}
+								</select>
+								{% if errors.tax_system %}
+								<div class="text-danger">{{ errors.tax_system }}</div>
+								{% endif %}
+							</div>
+						</div>
+						<div class="form-group required">
+							<label class="col-sm-2 control-label" for="module_komtet_kassa_vat_rate_product">{{ setting_vat_rate_product }}</label>
+							<div class="col-sm-10">
+								<select name="module_komtet_kassa_vat_rate_product" id="module_komtet_kassa_vat_rate_product" class="form-control" autocomplete="off">
+								{% for i in product_vat_rates %}
+									<option value={{ i.value }} {{ i.enabled ? ' selected="selected"' : '' }}>{{ i.label }}</option>
+								{% endfor %}
+								</select>
+								{% if errors.vat_rate_product %}
+								<div class="text-danger">{{ errors.vat_rate_product }}</div>
+								{% endif %}
+							</div>
+						</div>
+						<div class="form-group required">
+							<label class="col-sm-2 control-label" for="module_komtet_kassa_vat_rate_shipping">{{ setting_vat_rate_shipping }}</label>
+							<div class="col-sm-10">
+								<select name="module_komtet_kassa_vat_rate_shipping" id="module_komtet_kassa_vat_rate_shipping" class="form-control" autocomplete="off">
+								{% for i in shipping_vat_rates %}
+									<option value={{ i.value }} {{ i.enabled ? ' selected="selected"' : '' }}>{{ i.label }}</option>
+								{% endfor %}
+								</select>
+								{% if errors.vat_rate_shipping %}
+								<div class="text-danger">{{ errors.vat_rate_shipping }}</div>
+								{% endif %}
+							</div>
+						</div>
+						<div class="form-group required">
+							<label class="col-sm-2 control-label" for="module_komtet_kassa_payment_codes">{{ setting_payment_codes }}</label>
+							<div class="col-sm-10">
+								<select multiple="multiple" size="3" name="module_komtet_kassa_payment_codes[]" id="module_komtet_kassa_payment_codes" class="form-control" autocomplete="off">
+								{% for i in payment_codes %}
+									<option value="{{ i.value }}" {{ i.enabled ? ' selected="selected"' : '' }}>{{ i.label }}</option>
+								{% endfor %}
+								</select>
+								{% if errors.payment_codes %}
+								<div class="text-danger">{{ errors.payment_codes }}</div>
+								{% endif %}
+							</div>
+						</div>
+						<div class="form-group required">
+							<label class="col-sm-2 control-label" for="module_komtet_kassa_statuses_sell">{{ setting_statuses_sell }}</label>
+							<div class="col-sm-10">
+								<select multiple="multiple" size="3" name="module_komtet_kassa_statuses_sell[]" id="module_komtet_kassa_statuses_sell" class="form-control" autocomplete="off">
+								{% for i in statuses_sell %}
+									<option value="{{ i.value }}" {{ i.enabled ? ' selected="selected"' : '' }}>{{ i.label }}</option>
+								{% endfor %}
+								</select>
+								{% if errors.statuses_sell %}
+								<div class="text-danger">{{ errors.statuses_sell }}</div>
+								{% endif %}
+							</div>
+						</div>
+						<div class="form-group required">
+							<label class="col-sm-2 control-label" for="module_komtet_kassa_statuses_return">{{ setting_statuses_return }}</label>
+							<div class="col-sm-10">
+								<select multiple="multiple" size="3" name="module_komtet_kassa_statuses_return[]" id="komtet_kassa_statuses_return" class="form-control" autocomplete="off">
+								{% for i in statuses_return %}
+									<option value="{{ i.value }}" {{ i.enabled ? ' selected="selected"' : '' }}>{{ i.label }}</option>
+								{% endfor %}
+								</select>
+								{% if errors.statuses_return %}
+								<div class="text-danger">{{ errors.statuses_return }}</div>
+								{% endif %}
+							</div>
+						</div>
+						<div class="form-group required">
+							<label class="col-sm-2 control-label" for="module_komtet_kassa_should_print">{{ setting_should_print }}</label>
+							<div class="col-sm-10">
+								<select name="module_komtet_kassa_should_print" id="module_komtet_kassa_should_print" class="form-control" autocomplete="off">
+									<option value="1" {{ settings.should_print ? 'selected="selected"' : '' }}>{{ text_enabled }}</option>
+									<option value="0" {{ settings.should_print ? '' : 'selected="selected"' }}>{{ text_disabled }}</option>
+								</select>
+								{% if errors.should_print %}
+								<div class="text-danger">{{ errors.should_print }}</div>
+								{% endif %}
+							</div>
+						</div>
+						<div class="form-group required">
+							<label class="col-sm-2 control-label" for="module_komtet_kassa_status">{{ setting_status }}</label>
+							<div class="col-sm-10">
+								<select name="module_komtet_kassa_status" id="module_komtet_kassa_status" class="form-control" autocomplete="off">
+									<option value="1" {{ settings.status ? 'selected="selected"' : '' }}>{{ text_enabled }}</option>
+									<option value="0" {{ settings.status ? '' : 'selected="selected"' }}>{{ text_disabled }}</option>
+								</select>
+								{% if errors.status %}
+								<div class="text-danger">{{ errors.status }}</div>
+								{% endif %}
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		{% endif %}
+	</div>
+</div>
+{{ footer }}
