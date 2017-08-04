@@ -62,7 +62,6 @@ class ControllerExtensionModuleKomtetKassa extends Controller {
 		}
 
 		$this->db->query("DROP TABLE IF EXISTS `" . DB_PREFIX . "komtet_kassa_report`;");
-		$this->model_user_user_group->removePermission($this->user->getId(), 'access', 'extension/report/komtet_kassa');
 	}
 
 	public function index() {
