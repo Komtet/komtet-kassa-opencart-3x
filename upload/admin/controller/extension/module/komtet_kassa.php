@@ -98,12 +98,16 @@ class ControllerExtensionModuleKomtetKassa extends Controller {
 			$data['cancel'] = $this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=module', true);
 
 			$data['errors'] = array();
+			$data['settings'] = array();
 
 			if ($this->request->server['REQUEST_METHOD'] == 'POST') {
 				$errorRequired = $this->language->get('error_required');
 				foreach (array_keys($this->metadata['settings']) as $key) {
-					if (!isset($this->request->post[$key])) {
-						$data['errors'][str_replace(self::SETTING_PREFIX, '', $key)] = $errorRequired;
+					$settingsKey = str_replace(self::SETTING_PREFIX, '', $key);
+					if (!isset($this->request->post[$key]) || $this->request->post[$key] == '') {
+						$data['errors'][$settingsKey] = $errorRequired;
+					} else {
+						$data['settings'][$settingsKey] = $this->request->post[$key];
 					}
 				}
 				if (empty($data['errors'])) {
@@ -113,16 +117,10 @@ class ControllerExtensionModuleKomtetKassa extends Controller {
 				}
 			}
 
-			$data['settings'] = array();
-			if (!empty($data['errors'])) {
-				foreach ($this->request->post as $key => $value) {
-					if (strpos($key, self::SETTING_PREFIX) === 0) {
-						$data['settings'][str_replace(self::SETTING_PREFIX, '', $key)] = $value;
-					}
-				}
-			} else {
-				foreach ($this->model_setting_setting->getSetting(self::SETTING_CODE) as $key => $value) {
-					$data['settings'][str_replace(self::SETTING_PREFIX, '', $key)] = $value;
+			foreach ($this->model_setting_setting->getSetting(self::SETTING_CODE) as $key => $value) {
+				$key = str_replace(self::SETTING_PREFIX, '', $key);
+				if (!array_key_exists($key, $data['settings'])) {
+					$data['settings'][$key] = $value;
 				}
 			}
 
