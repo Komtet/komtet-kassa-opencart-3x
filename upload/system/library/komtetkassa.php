@@ -87,7 +87,7 @@ class KomtetKassa {
 				floatval($product['quantity']),
 				$productPriceTotal,
 				abs(floatval($totals['coupon'])),
-				Vat::calculate($productPrice, $productVatRate)
+				new Vat($productVatRate)
 			));
 			$total += $productPriceTotal;
 		}
@@ -99,7 +99,7 @@ class KomtetKassa {
 			1, // quantity
 			$totals['shipping'],
 			0, // discount
-			Vat::calculate($totals['shipping'], $shippingVatRate)
+			new Vat($shippingVatRate)
 		));
 
 		$payment = Payment::createCard($total + $totals['shipping']);
