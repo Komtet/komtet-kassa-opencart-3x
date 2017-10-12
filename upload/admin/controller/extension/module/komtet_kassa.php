@@ -33,9 +33,9 @@ class ControllerExtensionModuleKomtetKassa extends Controller {
 		$this->load->model('setting/setting');
 		$this->model_setting_setting->editSetting(self::SETTING_CODE, $this->metadata['settings']);
 
-		$this->load->model('setting/event');
+		$this->load->model('extension/event');
 		foreach ($this->metadata['events'] as $event) {
-			$this->model_setting_event->addEvent($event['code'], $event['trigger'], $event['action']);
+			$this->model_extension_event->addEvent($event['code'], $event['trigger'], $event['action']);
 		}
 
 		$this->db->query("
@@ -49,6 +49,7 @@ class ControllerExtensionModuleKomtetKassa extends Controller {
 		");
 
 		$this->load->model('user/user_group');
+		$this->model_user_user_group->addPermission($this->user->getId(), 'access', 'extension/report');
 		$this->model_user_user_group->addPermission($this->user->getId(), 'access', 'extension/report/komtet_kassa');
 	}
 
@@ -56,32 +57,39 @@ class ControllerExtensionModuleKomtetKassa extends Controller {
 		$this->load->model('setting/setting');
 		$this->model_setting_setting->deleteSetting(self::SETTING_CODE);
 
-		$this->load->model('setting/event');
+		$this->load->model('extension/event');
 		foreach ($this->metadata['events'] as $event) {
-			$this->model_setting_event->deleteEventByCode($event['code']);
+			$this->model_extension_event->deleteEvent($event['code']);
 		}
 
 		$this->db->query("DROP TABLE IF EXISTS `" . DB_PREFIX . "komtet_kassa_report`;");
+
+		$this->load->model('user/user_group');
+		$this->model_user_user_group->removePermission($this->user->getId(), 'access', 'extension/report/komtet_kassa');
 	}
 
 	public function index() {
 		$this->load->language(self::ROUTE);
-		$this->document->setTitle($this->language->get('heading_title'));
+		$headingTitle = $this->language->get('heading_title');
+		$this->document->setTitle($headingTitle);
 
 		$data = array();
+
+		$data['heading_title'] = $headingTitle;
+		$data['text_edit'] = $this->language->get('text_edit');
 
 		$data['breadcrumbs'] = array(
 			array(
 				'text' => $this->language->get('text_home'),
-				'href' => $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'], true)
+				'href' => $this->url->link('common/dashboard', 'token=' . $this->session->data['token'], true)
 			),
 			array(
 				'text' => $this->language->get('text_extension'),
-				'href' => $this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=module', true)
+				'href' => $this->url->link('marketplace/extension', 'token=' . $this->session->data['token'] . '&type=module', true)
 			),
 			array(
 				'text' => $this->language->get('heading_title'),
-				'href' => $this->url->link(self::ROUTE, 'user_token=' . $this->session->data['user_token'], true)
+				'href' => $this->url->link(self::ROUTE, 'token=' . $this->session->data['token'], true)
 			)
 		);
 
@@ -90,11 +98,32 @@ class ControllerExtensionModuleKomtetKassa extends Controller {
 		} else {
 			$this->load->library('komtetkassa');
 			$this->load->model('localisation/order_status');
-			$this->load->model('setting/extension');
+			$this->load->model('extension/extension');
 			$this->load->model('setting/setting');
 
-			$data['action'] = $this->url->link(self::ROUTE, 'user_token=' . $this->session->data['user_token'], true);
-			$data['cancel'] = $this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=module', true);
+			$data['denied'] = false;
+			$data['action'] = $this->url->link(self::ROUTE, 'token=' . $this->session->data['token'], true);
+			$data['cancel'] = $this->url->link('marketplace/extension', 'token=' . $this->session->data['token'] . '&type=module', true);
+
+			foreach (array(
+				'server_url',
+				'shop_id',
+				'secret_key',
+				'queue_id',
+				'tax_system',
+				'vat_rate_product',
+				'vat_rate_shipping',
+				'payment_codes',
+				'statuses_sell',
+				'statuses_return',
+				'should_print',
+				'status'
+			) as $i) {
+				$key = 'setting_'.$i;
+				$data[$key] = $this->language->get($key);
+			}
+			$data['text_enabled'] = $this->language->get('text_enabled');
+			$data['text_disabled'] = $this->language->get('text_disabled');
 
 			$data['errors'] = array();
 			$data['settings'] = array();
@@ -112,7 +141,7 @@ class ControllerExtensionModuleKomtetKassa extends Controller {
 				if (empty($data['errors'])) {
 					$this->model_setting_setting->editSetting(self::SETTING_CODE, $this->request->post);
 					$this->session->data['success'] = $this->language->get('text_success');
-					$this->response->redirect($this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=module', true));
+					$this->response->redirect($this->url->link('extension/extension', 'token=' . $this->session->data['token'] . '&type=module', true));
 				}
 			}
 
@@ -149,14 +178,14 @@ class ControllerExtensionModuleKomtetKassa extends Controller {
 
 			$data['payment_codes'] = array_map(function ($item) use ($data) {
 				$lang = 'payment_' . $item;
-				$this->load->language('extension/payment/' . $item, $lang);
+				$this->load->language('extension/payment/' . $item);
 
 				return array(
-					'label' => $this->language->get($lang)->get('heading_title'),
+					'label' => $this->language->get('heading_title'),
 					'value' => $item,
 					'enabled' => in_array($item, $data['settings']['payment_codes']),
 				);
-			}, $this->model_setting_extension->getInstalled('payment'));
+			}, $this->model_extension_extension->getInstalled('payment'));
 
 			$orderStatuses = $this->model_localisation_order_status->getOrderStatuses();
 
@@ -180,6 +209,8 @@ class ControllerExtensionModuleKomtetKassa extends Controller {
 		$data['header'] = $this->load->controller('common/header');
 		$data['column_left'] = $this->load->controller('common/column_left');
 		$data['footer'] = $this->load->controller('common/footer');
+		$data['button_save'] = $this->language->get('button_save');
+		$data['button_cancel'] = $this->language->get('button_cancel');
 
 		$this->response->setOutput($this->load->view(self::ROUTE, $data));
 	}

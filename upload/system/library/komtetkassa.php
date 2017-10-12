@@ -7,6 +7,7 @@ use Komtet\KassaSdk\Exception\SdkException;
 use Komtet\KassaSdk\Payment;
 use Komtet\KassaSdk\Position;
 use Komtet\KassaSdk\QueueManager;
+use Komtet\KassaSdk\TaxSystem;
 use Komtet\KassaSdk\Vat;
 
 class KomtetKassa {
@@ -26,12 +27,12 @@ class KomtetKassa {
 
 	public function getTaxSystems() {
 		return array(
-			Check::TS_COMMON,
-			Check::TS_SIMPLIFIED_IN,
-			Check::TS_SIMPLIFIED_IN_OUT,
-			Check::TS_UTOII,
-			Check::TS_UST,
-			Check::TS_PATENT
+			TaxSystem::COMMON,
+			TaxSystem::SIMPLIFIED_IN,
+			TaxSystem::SIMPLIFIED_IN_OUT,
+			TaxSystem::UTOII,
+			TaxSystem::UST,
+			TaxSystem::PATENT
 		);
 	}
 
