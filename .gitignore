@@ -1,1 +1,3 @@
 *.ocmod.zip
+/php/**
+/data

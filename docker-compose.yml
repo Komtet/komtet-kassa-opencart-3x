@@ -1,0 +1,50 @@
+version: '3.4'
+
+services:
+
+  db:
+    image: mysql:5.7
+    container_name: db
+    environment:
+      MYSQL_ROOT_PASSWORD: my_secret_pw_shh
+      MYSQL_DATABASE: opencart_db
+      MYSQL_USER: devuser
+      MYSQL_PASSWORD: devpass
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    ports:
+      - "9906:3306"
+
+  web5:
+    image: ss_web:last
+    build:
+      context: .
+      target: php5
+    container_name: web5
+    depends_on:
+      - db
+    volumes:
+      - ./php/:/var/www/html/
+    ports:
+      - "8000:80"
+    links:
+      - db:mysql
+    stdin_open: true
+    tty: true
+
+  web7:
+    image: ss_web:last
+    build:
+      context: .
+      target: php7
+    container_name: web7
+    depends_on:
+      - db
+    volumes:
+      - ./php/:/var/www/html/
+    ports:
+      - "8000:80"
+    links:
+      - db:mysql
+    stdin_open: true
+    tty: true
