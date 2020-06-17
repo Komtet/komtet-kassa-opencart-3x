@@ -1,19 +1,19 @@
 version: '3.4'
 
-x-function: &function
-  image: ss_web:last
-  depends_on:
-    - db
-  volumes:
-    - ./php/:/var/www/html/
-  ports:
-    - "8000:80"
-  links:
-    - db:mysql
-  stdin_open: true
-  tty: true
-
 services:
+
+  backend_common: &backend_common
+    image: ss_web:last
+    depends_on:
+      - db
+    volumes:
+      - ./php/:/var/www/html/
+    ports:
+      - "8000:80"
+    links:
+      - db:mysql
+    stdin_open: true
+    tty: true
 
   db:
     image: mysql:5.7
@@ -29,14 +29,14 @@ services:
       - "9906:3306"
 
   web5:
-    <<: *function
+    <<: *backend_common
     build:
       context: .
       target: php5
     container_name: web5
 
   web7:
-    <<: *function
+    <<: *backend_common
     build:
       context: .
       target: php7
