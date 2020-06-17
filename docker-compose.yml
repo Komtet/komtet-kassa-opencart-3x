@@ -1,5 +1,18 @@
 version: '3.4'
 
+x-function: &function
+  image: ss_web:last
+  depends_on:
+    - db
+  volumes:
+    - ./php/:/var/www/html/
+  ports:
+    - "8000:80"
+  links:
+    - db:mysql
+  stdin_open: true
+  tty: true
+
 services:
 
   db:
@@ -16,35 +29,15 @@ services:
       - "9906:3306"
 
   web5:
-    image: ss_web:last
+    <<: *function
     build:
       context: .
       target: php5
     container_name: web5
-    depends_on:
-      - db
-    volumes:
-      - ./php/:/var/www/html/
-    ports:
-      - "8000:80"
-    links:
-      - db:mysql
-    stdin_open: true
-    tty: true
 
   web7:
-    image: ss_web:last
+    <<: *function
     build:
       context: .
       target: php7
     container_name: web7
-    depends_on:
-      - db
-    volumes:
-      - ./php/:/var/www/html/
-    ports:
-      - "8000:80"
-    links:
-      - db:mysql
-    stdin_open: true
-    tty: true

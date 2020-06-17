@@ -9,16 +9,16 @@ help:
 version:  ## Версия проекта
 	@echo -e "${BCyan}Version:${Color_Off} $(VERSION)";
 
-build:  ## Собрать контейнер
+build:  ## Сборка проекта
 	@docker-compose build
 
-stop: ## Остановить все контейнеры
+stop: ## Остановка проекта
 	@docker-compose down
 
-start_web5: stop  ## Запустить контейнер
+start_web5: stop  ## Запуск проекта
 	@docker-compose up -d web5
 
-start_web7: stop  ## Запустить контейнер
+start_web7: stop  ## Запуск проекта
 	@docker-compose up -d web7
 
 update:  #Обновить модуль
