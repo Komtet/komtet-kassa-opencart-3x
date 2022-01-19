@@ -83,10 +83,10 @@ class KomtetKassa {
 			$productPriceTotal = $productPrice * $product['quantity'];
 			$check->addPosition(new Position(
 				html_entity_decode($product['name']),
-				$productPrice,
+				round($productPrice, 2),
 				floatval($product['quantity']),
-				$productPriceTotal,
-				abs(floatval($totals['coupon'])),
+				round($productPriceTotal, 2),
+				0,
 				new Vat($productVatRate)
 			));
 			$total += $productPriceTotal;
