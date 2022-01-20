@@ -1,12 +1,14 @@
 <?php
 require_once __DIR__.'/komtet-kassa-sdk/autoload.php';
 
+use Komtet\KassaSdk\CalculationSubject;
 use Komtet\KassaSdk\Check;
 use Komtet\KassaSdk\Client;
 use Komtet\KassaSdk\Exception\SdkException;
 use Komtet\KassaSdk\Payment;
 use Komtet\KassaSdk\Position;
 use Komtet\KassaSdk\QueueManager;
+use Komtet\KassaSdk\TaxSystem;
 use Komtet\KassaSdk\Vat;
 
 class KomtetKassa {
@@ -26,12 +28,12 @@ class KomtetKassa {
 
 	public function getTaxSystems() {
 		return array(
-			Check::TS_COMMON,
-			Check::TS_SIMPLIFIED_IN,
-			Check::TS_SIMPLIFIED_IN_OUT,
-			Check::TS_UTOII,
-			Check::TS_UST,
-			Check::TS_PATENT
+			TaxSystem::COMMON,
+			TaxSystem::SIMPLIFIED_IN,
+			TaxSystem::SIMPLIFIED_IN_OUT,
+			TaxSystem::UTOII,
+			TaxSystem::UST,
+			TaxSystem::PATENT
 		);
 	}
 
@@ -40,9 +42,9 @@ class KomtetKassa {
 			Vat::RATE_NO,
 			Vat::RATE_0,
 			Vat::RATE_10,
-			Vat::RATE_18,
+			Vat::RATE_20,
 			Vat::RATE_110,
-			Vat::RATE_118,
+			Vat::RATE_120,
 		);
 	}
 
@@ -69,7 +71,7 @@ class KomtetKassa {
 		}
 
 		$totals = $this->getOrderTotals($orderID);
-		$additionalPrice = ($totals['tax'] + $totals['coupon'] + $totals['voucher']) / $totals['sub_total'];
+		$discount = abs($totals['tax'] + $totals['coupon'] + $totals['voucher']);
 
 		$taxSystem = intval($this->config->get('module_komtet_kassa_tax_system'));
 		$check = new Check($orderID, $order['email'], $intent, $taxSystem);
@@ -78,38 +80,43 @@ class KomtetKassa {
 		$total = 0;
 		$stmt = sprintf("SELECT * FROM " . DB_PREFIX . "order_product WHERE order_id = %d", $orderID);
 		$productVatRate = $this->config->get('module_komtet_kassa_vat_rate_product');
+
 		foreach ($this->db->query($stmt)->rows as $product) {
-			$productPrice = $product['price'] * (1 + $additionalPrice);
-			$productPriceTotal = $productPrice * $product['quantity'];
+			$productTotal = $product['price'] * $product['quantity'];
 			$check->addPosition(new Position(
 				html_entity_decode($product['name']),
-				round($productPrice, 2),
+				round($product['price'], 2),
 				floatval($product['quantity']),
-				round($productPriceTotal, 2),
-				0,
+				round($productTotal, 2),
 				new Vat($productVatRate)
 			));
-			$total += $productPriceTotal;
+			$total += $productTotal;
+		}
+
+		if ($discount > 0) {
+			$check->applyDiscount($discount);
 		}
 
 		$shippingVatRate = $this->config->get('module_komtet_kassa_vat_rate_shipping');
-		$check->addPosition(new Position(
+		$shipping_position = new Position(
 			'Доставка',
 			$totals['shipping'],
 			1, // quantity
 			$totals['shipping'],
-			0, // discount
 			new Vat($shippingVatRate)
-		));
+		);
 
-		$payment = Payment::createCard($total + $totals['shipping']);
+		// Доставка передаётся как услуга
+		$shipping_position->setCalculationSubject(CalculationSubject::SERVICE);
+		$check->addPosition($shipping_position);
+
+		$payment = new Payment(Payment::TYPE_CARD, round(($total + $totals['shipping'] - $discount)),2);
 		$check->addPayment($payment);
 
 		$client = new Client(
 			$this->config->get('module_komtet_kassa_shop_id'),
 			$this->config->get('module_komtet_kassa_secret_key')
 		);
-		$client->setHost($this->config->get('module_komtet_kassa_server_url'));
 		$qm = new QueueManager($client);
 		$qm->registerQueue('default', $this->config->get('module_komtet_kassa_queue_id'));
 		$qm->setDefaultQueue('default');
