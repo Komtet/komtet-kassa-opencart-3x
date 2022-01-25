@@ -1,7 +1,7 @@
 ## Запуск проекта
 
 * Склонируйте репозиторий включая подмодули для подтягивания SDK - git clone --recurse-submodules
-* Скачать установщик Shopscript CMS - http://opencart-russia.ru/
+* Скачать установщик Opencart CMS - http://opencart-russia.ru/
 * Распаковать архив OpenCart CMS в корневой каталог и переименовать upload-x-x в php
 * Переименовать файлы: /php/config-dist.php и /php/admin/config-dist.php в config.php
 * Запустить сборку проекта
@@ -51,7 +51,7 @@ make build
 make start_web5
 ```
 
-* Запустить проект на php7.2
+* Запустить проект на php7.3
 ```sh
 make start_web7
 ```
@@ -68,8 +68,14 @@ make update
 
 * Подготовить архив для загрузки в маркет
 ```sh
+make market_release
+```
+
+* Подготовить архив для ручной установки плагина через CMS
+```sh
 make release
 ```
+
 * Версия проекта
 ```sh
 make version

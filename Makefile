@@ -26,10 +26,14 @@ update:  #Обновить модуль
 	  cp -rf upload/system/ php/ && \
 	  cp -rf upload/catalog/ php/
 
-release:  ## Архивировать для загрузки в маркет
+market_release:  ## Архивировать для загрузки в маркет
 	@tar\
 	 --exclude='upload/system/library/komtet-kassa-sdk/*' \
 	 -czvf komtet-kassa-$(VERSION).tar.gz upload/
+
+release: ## Архивировать для ручной установки плагина через CMS
+	@zip\
+	 -r komtet-kassa-$(VERSION).ocmod.zip upload/ install.xml
 
 
 .PHONY: help

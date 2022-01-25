@@ -4,7 +4,7 @@ RUN docker-php-ext-install mysqli
 WORKDIR /var/www/html
 COPY php .
 
-FROM php:7.2-apache as php7
+FROM php:7.3-apache as php7
 RUN docker-php-ext-install mysqli
 
 RUN apt-get update && apt-get install -y libzip-dev \
