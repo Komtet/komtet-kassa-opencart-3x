@@ -110,7 +110,10 @@ class KomtetKassa {
 		$shipping_position->setCalculationSubject(CalculationSubject::SERVICE);
 		$check->addPosition($shipping_position);
 
-		$payment = new Payment(Payment::TYPE_CARD, round(($total + $totals['shipping'] - $discount)),2);
+		$payment = new Payment(
+			Payment::TYPE_CARD,
+			round($total + $totals['shipping'] - $discount , 2)
+		);
 		$check->addPayment($payment);
 
 		$client = new Client(

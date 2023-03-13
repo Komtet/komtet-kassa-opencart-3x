@@ -2,7 +2,7 @@
 <modification>
     <name>KOMTET Kassa</name>
     <code>komtet_kassa</code>
-    <version>3.0.0</version>
+    <version>3.0.1</version>
     <author>KOMTET</author>
     <link>http://kassa.komtet.ru</link>
     <file path="admin/controller/common/column_left.php">
@@ -23,4 +23,3 @@
         </operation>
     </file>
 </modification>
-
