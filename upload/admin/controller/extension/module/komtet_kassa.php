@@ -7,7 +7,6 @@ class ControllerExtensionModuleKomtetKassa extends Controller {
 
 	private $metadata = array(
 		'settings' => array(
-			'module_komtet_kassa_server_url' => 'https://kassa.komtet.ru',
 			'module_komtet_kassa_shop_id' => '',
 			'module_komtet_kassa_secret_key' => '',
 			'module_komtet_kassa_queue_id' => '',
@@ -17,7 +16,8 @@ class ControllerExtensionModuleKomtetKassa extends Controller {
 			'module_komtet_kassa_payment_codes' => [],
 			'module_komtet_kassa_statuses_sell' => [],
 			'module_komtet_kassa_statuses_return' => [],
-			'module_komtet_kassa_should_print' => 1,
+			'module_komtet_kassa_should_print' => 0,
+			'module_komtet_kassa_is_internet' => 1,
 			'module_komtet_kassa_status' => 0,
 		),
 		'events' => array(
