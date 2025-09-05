@@ -4,6 +4,7 @@ services:
 
   backend_common: &backend_common
     image: ss_web:last
+    platform: linux/amd64
     depends_on:
       - db
     volumes:
@@ -17,6 +18,7 @@ services:
 
   db:
     image: mysql:5.7
+    platform: linux/amd64
     container_name: db
     environment:
       MYSQL_ROOT_PASSWORD: my_secret_pw_shh

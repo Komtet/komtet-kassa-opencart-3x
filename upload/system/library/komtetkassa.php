@@ -1,15 +1,15 @@
 <?php
 require_once __DIR__.'/komtet-kassa-sdk/autoload.php';
 
-use Komtet\KassaSdk\CalculationSubject;
-use Komtet\KassaSdk\Check;
-use Komtet\KassaSdk\Client;
 use Komtet\KassaSdk\Exception\SdkException;
-use Komtet\KassaSdk\Payment;
-use Komtet\KassaSdk\Position;
-use Komtet\KassaSdk\QueueManager;
-use Komtet\KassaSdk\TaxSystem;
-use Komtet\KassaSdk\Vat;
+use Komtet\KassaSdk\v1\CalculationSubject;
+use Komtet\KassaSdk\v1\Check;
+use Komtet\KassaSdk\v1\Client;
+use Komtet\KassaSdk\v1\Payment;
+use Komtet\KassaSdk\v1\Position;
+use Komtet\KassaSdk\v1\QueueManager;
+use Komtet\KassaSdk\v1\TaxSystem;
+use Komtet\KassaSdk\v1\Vat;
 
 class KomtetKassa {
 	private $registry;
@@ -31,7 +31,6 @@ class KomtetKassa {
 			TaxSystem::COMMON,
 			TaxSystem::SIMPLIFIED_IN,
 			TaxSystem::SIMPLIFIED_IN_OUT,
-			TaxSystem::UTOII,
 			TaxSystem::UST,
 			TaxSystem::PATENT
 		);
@@ -41,10 +40,10 @@ class KomtetKassa {
 		return array(
 			Vat::RATE_NO,
 			Vat::RATE_0,
+			Vat::RATE_5,
+			Vat::RATE_7,
 			Vat::RATE_10,
-			Vat::RATE_20,
-			Vat::RATE_110,
-			Vat::RATE_120,
+			Vat::RATE_20
 		);
 	}
 
@@ -76,6 +75,7 @@ class KomtetKassa {
 		$taxSystem = intval($this->config->get('module_komtet_kassa_tax_system'));
 		$check = new Check($orderID, $order['email'], $intent, $taxSystem);
 		$check->setShouldPrint(intval($this->config->get('module_komtet_kassa_should_print')) === 1);
+		$check->setInternet(intval($this->config->get('module_komtet_kassa_is_internet')) === 1);
 
 		$total = 0;
 		$stmt = sprintf("SELECT * FROM " . DB_PREFIX . "order_product WHERE order_id = %d", $orderID);
