@@ -1,7 +1,7 @@
 ## Запуск проекта
 
 * Склонируйте репозиторий включая подмодули для подтягивания SDK - git clone --recurse-submodules
-* Скачать установщик Opencart CMS - http://opencart-russia.ru/
+* Скачать установщик Opencart CMS - http://opencart-russia.ru/ -> Центр Загрузки
 * Распаковать архив OpenCart CMS в корневой каталог и переименовать upload-x-x в php
 * Переименовать файлы: /php/config-dist.php и /php/admin/config-dist.php в config.php
 * Запустить сборку проекта
@@ -13,13 +13,15 @@ make build
 
 * Запустить контейнер
 ```sh
-make start_web7
+make start_web8
 ```
 * Установить права на папку php
 ```sh
 sudo chmod -R 777 php
 ```
+
 * Проект будет доступен по адресу: localhost:8000;
+
 * Настройки подключения к бд MySQL:
 ```sh
 Сервер: mysql
@@ -31,9 +33,11 @@ sudo chmod -R 777 php
 * Следует добавить администратора системы
 * После завершения установки необходимо удалить установочную директорию /php/install
 
+* Панель администратора будет доступна по адресу localhost:8000/admin/index.php
+
 ## Установка модуля КОМТЕТ КАССЫ для Opencart 3.x
 
-* Необходимо [Скачать архив](https://github.com/Komtet/komtet-kassa-opencart/releases) 
+* Необходимо [Скачать архив](https://github.com/Komtet/komtet-kassa-opencart/releases)
 * Файл должен называться `komtet-kassa-<version>.ocmod.zip`, где `<version>` &mdash; это версия модуля.
 * Необходиомо перейти в раздел Модули/Расширения >> Установка расширений
 * Загрузить скачанный архив
@@ -45,10 +49,6 @@ sudo chmod -R 777 php
 * Собрать проект
 ```sh
 make build
-```
-* Запустить проект на php5.6
-```sh
-make start_web5
 ```
 
 * Запустить проект на php7.3
