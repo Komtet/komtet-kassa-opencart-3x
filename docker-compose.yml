@@ -30,16 +30,9 @@ services:
     ports:
       - "9906:3306"
 
-  web5:
+  web8:
     <<: *backend_common
     build:
       context: .
-      target: php5
-    container_name: web5
-
-  web7:
-    <<: *backend_common
-    build:
-      context: .
-      target: php7
-    container_name: web7
+      target: php8
+    container_name: web8

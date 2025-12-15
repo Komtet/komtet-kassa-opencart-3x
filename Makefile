@@ -15,11 +15,8 @@ build:  ## Сборка проекта
 stop: ## Остановка проекта
 	@docker-compose down
 
-start_web5: stop  ## Запуск проекта
-	@docker-compose up -d web5
-
-start_web7: stop  ## Запуск проекта
-	@docker-compose up -d web7
+start_web8: stop  ## Запуск проекта
+	@docker-compose up web8
 
 update:  #Обновить модуль
 	 @cp -rf upload/admin/ php/ && \
