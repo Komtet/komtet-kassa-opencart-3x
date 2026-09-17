@@ -5,15 +5,32 @@ class ControllerExtensionModuleKomtetKassa extends Controller {
 	const SETTING_CODE = 'module_komtet_kassa';
 	const SETTING_PREFIX = 'module_komtet_kassa_';
 
+	private $requiredSettins = array(
+		'shop_id',
+		'secret_key',
+		'queue_id',
+		'tax_system',
+		'vat_rate_product',
+		'vat_rate_shipping',
+		'payment_codes',
+		'statuses_prepay',
+		'statuses_sell',
+		'statuses_return',
+		'should_print',
+		'is_internet',
+		'status',
+	);
+
 	private $metadata = array(
 		'settings' => array(
 			'module_komtet_kassa_shop_id' => '',
 			'module_komtet_kassa_secret_key' => '',
 			'module_komtet_kassa_queue_id' => '',
 			'module_komtet_kassa_tax_system' => 0,
-			'module_komtet_kassa_vat_rate_product' => 18,
-			'module_komtet_kassa_vat_rate_shipping' => 18,
+			'module_komtet_kassa_vat_rate_product' => 22,
+			'module_komtet_kassa_vat_rate_shipping' => 22,
 			'module_komtet_kassa_payment_codes' => [],
+			'module_komtet_kassa_statuses_prepay' => [],
 			'module_komtet_kassa_statuses_sell' => [],
 			'module_komtet_kassa_statuses_return' => [],
 			'module_komtet_kassa_should_print' => 0,
@@ -35,6 +52,7 @@ class ControllerExtensionModuleKomtetKassa extends Controller {
 
 		$this->load->model('setting/event');
 		foreach ($this->metadata['events'] as $event) {
+			$this->model_setting_event->deleteEventByCode($event['code']);
 			$this->model_setting_event->addEvent($event['code'], $event['trigger'], $event['action']);
 		}
 
@@ -103,10 +121,14 @@ class ControllerExtensionModuleKomtetKassa extends Controller {
 				$errorRequired = $this->language->get('error_required');
 				foreach (array_keys($this->metadata['settings']) as $key) {
 					$settingsKey = str_replace(self::SETTING_PREFIX, '', $key);
-					if (!isset($this->request->post[$key]) || $this->request->post[$key] == '') {
-						$data['errors'][$settingsKey] = $errorRequired;
+					if (in_array($key, $this->requiredSettins, true)) {
+						if (!isset($this->request->post[$key]) || $this->request->post[$key] === '') {
+							$data['errors'][$settingsKey] = $errorRequired;
+						} else {
+							$data['settings'][$settingsKey] = $this->request->post[$key];
+						}
 					} else {
-						$data['settings'][$settingsKey] = $this->request->post[$key];
+						$data['settings'][$settingsKey] = $this->request->post[$key] ?? null;
 					}
 				}
 				if (empty($data['errors'])) {
@@ -159,6 +181,17 @@ class ControllerExtensionModuleKomtetKassa extends Controller {
 			}, $this->model_setting_extension->getInstalled('payment'));
 
 			$orderStatuses = $this->model_localisation_order_status->getOrderStatuses();
+
+			$data['statuses_prepay'] = array_map(function ($item) use ($data) {
+				return array(
+					'label' => $item['name'],
+					'value' => $item['order_status_id'],
+					'enabled' => in_array(
+						$item['order_status_id'],
+						$data['settings']['statuses_prepay'] ?? []
+					)
+				);
+			}, $orderStatuses);
 
 			$data['statuses_sell'] = array_map(function ($item) use ($data) {
 				return array(

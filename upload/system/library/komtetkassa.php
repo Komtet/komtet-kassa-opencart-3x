@@ -2,6 +2,7 @@
 require_once __DIR__.'/komtet-kassa-sdk/autoload.php';
 
 use Komtet\KassaSdk\Exception\SdkException;
+use Komtet\KassaSdk\v1\CalculationMethod;
 use Komtet\KassaSdk\v1\CalculationSubject;
 use Komtet\KassaSdk\v1\Check;
 use Komtet\KassaSdk\v1\Client;
@@ -48,6 +49,63 @@ class KomtetKassa {
 		);
 	}
 
+    protected static $prePaymentVatMap = [
+        Vat::RATE_5  => Vat::RATE_105,
+        Vat::RATE_7  => Vat::RATE_107,
+        Vat::RATE_10 => Vat::RATE_110,
+        Vat::RATE_20 => Vat::RATE_120,
+        Vat::RATE_22 => Vat::RATE_122
+    ];
+
+    protected function getPaymentProps($orderStatus, $statusesHistory, $statusesPrepay, $statusesSell)
+    {
+        /**
+         * Получение опций оплаты
+         * @param string $orderStatus новый статус заказа
+         * @param string $statusesHistory история всех статусов заказа
+         * @param array $statusesPrepay статусы предоплаты из настроек
+         * @param array $statusesSell статусы оплаты из настроек
+         */
+
+        // 1 check way
+        if (empty($statusesPrepay) && in_array($orderStatus, $statusesSell)) {
+            return array(
+                'calculationMethod' => CalculationMethod::FULL_PAYMENT,
+                'calculationSubject' => $this->calculationSubject,
+                'isFullPayment' => false
+            );
+        }
+        // 2 checks way
+        else if ($statusesPrepay) {
+            // prepayment
+            if (in_array($orderStatus, $statusesPrepay)) {
+                return array(
+                    'calculationMethod' => CalculationMethod::PRE_PAYMENT_FULL,
+                    'calculationSubject' => CalculationSubject::PAYMENT,
+                    'isFullPayment' => false
+                );
+            }
+            // full payment
+            else if (
+                in_array($orderStatus, $statusesSell) &&
+                array_intersect($statusesHistory, $statusesPrepay)
+            )
+            {
+                return array(
+                    'calculationMethod' => CalculationMethod::FULL_PAYMENT,
+                    'calculationSubject' => $this->calculationSubject,
+                    'isFullPayment' => true
+                );
+            }
+        }
+
+        return array(
+            'calculationMethod' => null,
+            'calculationSubject' => null,
+            'isFullPayment' => null
+        );
+    }
+
 	public function printCheck($orderID) {
 		if (intval($this->config->get('module_komtet_kassa_status')) === 0) {
 			return;
@@ -60,15 +118,39 @@ class KomtetKassa {
 			return;
 		}
 
-		$statusID = $order['order_status_id'];
+		$statusID = (int)$order['order_status_id'];
 
-		if (in_array($statusID, $this->config->get('module_komtet_kassa_statuses_sell'))) {
+		$statusesPrepay = array_map('intval', (array)$this->config->get('module_komtet_kassa_statuses_prepay'));
+		$statusesSell = array_map('intval', (array)$this->config->get('module_komtet_kassa_statuses_sell'));
+		$statusesReturn = array_map('intval', (array)$this->config->get('module_komtet_kassa_statuses_return'));
+
+		if (
+			in_array($statusID, $statusesSell, true) || in_array($statusID, $statusesPrepay, true)
+		) {
 			$intent = Check::INTENT_SELL;
-		} else if (in_array($statusID, $this->config->get('module_komtet_kassa_statuses_return'))) {
+		} else if (in_array($statusID, $statusesReturn, true)) {
 			$intent = Check::INTENT_SELL_RETURN;
 		} else {
 			return;
 		}
+
+		$statusesHistoryQuery = $this->db->query("
+			SELECT `order_status_id`
+			FROM `" . DB_PREFIX . "order_history`
+			WHERE `order_id` = '" . (int)$orderID . "'
+			ORDER BY `order_history_id` DESC
+		");
+		$statusesHistory = array_map(
+			function ($row) { return (int)$row['order_status_id']; },
+			$statusesHistoryQuery->rows
+		);
+
+		$paymentProps = $this->getPaymentProps(
+			$statusID,
+			$statusesHistory,
+			$statusesPrepay,
+			$statusesSell
+		);
 
 		$totals = $this->getOrderTotals($orderID);
 		$discount = abs($totals['tax'] + $totals['coupon'] + $totals['voucher']);
@@ -82,15 +164,25 @@ class KomtetKassa {
 		$stmt = sprintf("SELECT * FROM " . DB_PREFIX . "order_product WHERE order_id = %d", $orderID);
 		$productVatRate = $this->config->get('module_komtet_kassa_vat_rate_product');
 
+		if ($paymentProps['calculationMethod'] == CalculationMethod::PRE_PAYMENT_FULL) {
+			$productVatRate = self::$prePaymentVatMap[$productVatRate] ?? $productVatRate;
+		}
+		$productVatRate = new Vat($productVatRate);
+
 		foreach ($this->db->query($stmt)->rows as $product) {
 			$productTotal = $product['price'] * $product['quantity'];
-			$check->addPosition(new Position(
+			$position = new Position(
 				html_entity_decode($product['name']),
 				round($product['price'], 2),
 				floatval($product['quantity']),
 				round($productTotal, 2),
-				new Vat($productVatRate)
-			));
+				$productVatRate
+			);
+			$position->setCalculationMethod($paymentProps['calculationMethod']);
+			$position->setCalculationSubject($paymentProps['calculationSubject']);
+
+			$check->addPosition($position);
+
 			$total += $productTotal;
 		}
 
@@ -111,8 +203,9 @@ class KomtetKassa {
 		$shipping_position->setCalculationSubject(CalculationSubject::SERVICE);
 		$check->addPosition($shipping_position);
 
+		$paymentType = $paymentProps['isFullPayment'] ? Payment::TYPE_PREPAYMENT : Payment::TYPE_CARD;
 		$payment = new Payment(
-			Payment::TYPE_CARD,
+			$paymentType,
 			round($total + $totals['shipping'] - $discount , 2)
 		);
 		$check->addPayment($payment);

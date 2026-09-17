@@ -50,12 +50,6 @@ sudo chmod -R 777 php
 ```sh
 make build
 ```
-
-* Запустить проект на php7.3
-```sh
-make start_web7
-```
-
 * Остановить проект
 ```sh
 make stop

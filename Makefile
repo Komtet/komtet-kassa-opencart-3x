@@ -16,7 +16,7 @@ stop: ## Остановка проекта
 	@docker-compose down
 
 start_web8: stop  ## Запуск проекта
-	@docker-compose up web8
+	@docker-compose up web8 phpmyadmin
 
 update:  #Обновить модуль
 	 @cp -rf upload/admin/ php/ && \
