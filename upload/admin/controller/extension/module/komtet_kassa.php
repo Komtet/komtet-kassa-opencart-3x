@@ -5,7 +5,7 @@ class ControllerExtensionModuleKomtetKassa extends Controller {
 	const SETTING_CODE = 'module_komtet_kassa';
 	const SETTING_PREFIX = 'module_komtet_kassa_';
 
-	private $requiredSettins = array(
+	private $requiredSettings = array(
 		'shop_id',
 		'secret_key',
 		'queue_id',
@@ -121,7 +121,7 @@ class ControllerExtensionModuleKomtetKassa extends Controller {
 				$errorRequired = $this->language->get('error_required');
 				foreach (array_keys($this->metadata['settings']) as $key) {
 					$settingsKey = str_replace(self::SETTING_PREFIX, '', $key);
-					if (in_array($key, $this->requiredSettins, true)) {
+					if (in_array($key, $this->requiredSettings, true)) {
 						if (!isset($this->request->post[$key]) || $this->request->post[$key] === '') {
 							$data['errors'][$settingsKey] = $errorRequired;
 						} else {
