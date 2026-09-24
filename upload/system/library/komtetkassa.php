@@ -71,7 +71,7 @@ class KomtetKassa {
         if (empty($statusesPrepay) && in_array($orderStatus, $statusesSell)) {
             return array(
                 'calculationMethod' => CalculationMethod::FULL_PAYMENT,
-                'calculationSubject' => $this->calculationSubject,
+                'calculationSubject' => CalculationSubject::PRODUCT,
                 'isFullPayment' => false
             );
         }
@@ -93,7 +93,7 @@ class KomtetKassa {
             {
                 return array(
                     'calculationMethod' => CalculationMethod::FULL_PAYMENT,
-                    'calculationSubject' => $this->calculationSubject,
+                    'calculationSubject' => CalculationSubject::PRODUCT,
                     'isFullPayment' => true
                 );
             }
@@ -191,6 +191,10 @@ class KomtetKassa {
 		}
 
 		$shippingVatRate = $this->config->get('module_komtet_kassa_vat_rate_shipping');
+		if ($paymentProps['calculationMethod'] == CalculationMethod::PRE_PAYMENT_FULL) {
+			$shippingVatRate = self::$prePaymentVatMap[$shippingVatRate] ?? $shippingVatRate;
+		}
+
 		$shipping_position = new Position(
 			'Доставка',
 			$totals['shipping'],
