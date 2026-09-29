@@ -51,8 +51,14 @@ class ControllerExtensionModuleKomtetKassa extends Controller {
 		));
 	}
 
-	public function onAddOrderHistoryAfter($route, $args) {
-		$this->load->library('komtetkassa');
-		$this->komtetkassa->printCheck($args[0]);
+	public function onAddOrderHistoryAfter($route, $args, $output) {
+		try {
+			$this->load->library('komtetkassa');
+			$this->komtetkassa->printCheck((int)$args[0]);
+		} catch (\Throwable $e) {
+			$this->log->write('Komtet Kassa [' . $route . ']: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
+		}
+
+		return $output;
 	}
 }
